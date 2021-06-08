@@ -1,0 +1,2 @@
+FLASK_APP=vqg.py
+DATABASE_URL=vqg.db
