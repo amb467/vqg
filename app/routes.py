@@ -1,6 +1,6 @@
 from flask import render_template, flash, redirect
 from app import app
-from app.forms import LoginForm
+from app.forms import LoginForm, AnnotationForm
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -27,6 +27,9 @@ def index():
     ]
     return render_template('index.html', title='Home', user=user, posts=posts)
     
-@app.route('/annotate')
+@app.route('/annotate', methods=['GET', 'POST'])
 def annotate():
-    return render_template('annotate.html')
+    form = AnnotationForm()
+    if form.validate_on_submit():
+        print("Annotation form submitted!")
+    return render_template('annotate.html', form=form)
