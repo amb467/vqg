@@ -1,0 +1,10 @@
+textarea {
+	max-width: 100%;
+}
+
+.container {
+	display: flex,
+	width: 100%;
+	text-align: center;
+	justify-content: center;
+}

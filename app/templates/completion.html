@@ -1,0 +1,19 @@
+<html>
+	<head>
+		<title>Visual Question Generation Study - Completion</title>
+    </head>
+    <body> 
+    	<div class="container">
+			{% if completion_code %}
+
+				<p>Thanks for taking part in our research study!  Your completion code is {{ completion_code }}</p>
+				<p>Please cut and paste this completion code into Prolific to indicate that you have completed the task</p>
+	
+			{% else %}
+
+				<p>You did not successfully complete this task.  Please contact the Principal Investigator of this study, Amanda Buddemeyer, at amb467 (at) pitt.edu if you believe that you should have gotten a completion code.</p>
+
+			{% endif %}
+		</div>
+	</body>
+</html>

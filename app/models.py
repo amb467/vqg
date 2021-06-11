@@ -3,17 +3,15 @@ from app import db
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(32), index=True, unique=True)
-    email = db.Column(db.String(120), index=True, unique=True)
-    password_hash = db.Column(db.String(128))
-    age = db.Column(db.Integer)
-    gender = db.Column(db.String(64))
-    ethnicity = db.Column(db.String(64))
-    education = db.Column(db.String(64))
+    study_id = db.Column(db.Integer)
+    session_id = db.Column(db.Integer)
+    progress = db.Column(db.Integer, default=0)
     attn_check = db.Column(db.String(12))
+    vision_check = db.Column(db.String(12))
+    annotations = db.relationship('Annotation', backref='author', lazy='dynamic')
 
     def __repr__(self):
-        return '<User {}>'.format(self.username)  
+        return '<User {}>'.format(self.id)  
 
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -22,7 +20,7 @@ class Image(db.Model):
     def __repr__(self):
         return '<Image {}>'.format(self.id)    
     
-    	           
+                   
 class Annotation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     q_num = db.Column(db.Integer)

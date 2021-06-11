@@ -1,35 +1,12 @@
-<html>
-    <head>
-		<title>Welcome to the VQG Annotation application</title>
 
-		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
-  		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
-    
-    	<style>
-    		textarea {
-  				max-width: 100%;
-			}
-    	</style>
-    </head>
-    <body>
-        <div class="container">
-        	<div class="page-header">
-  				<h1>Visual Question Generation</h1>
-			</div>
- 			<div class="h-50 d-flex justify-content-center">
-  				<img src="https://vision.ece.vt.edu/data/mscoco/images/train2014/./COCO_train2014_000000314392.jpg" class="h-100 image-fluid"> 
-			</div>
-			    <form action="" method="post">
-        {{ form.hidden_tag() }}
-        {{ form.username(size=32) }}
-        {{ form.image_id(size=4) }}
-        {{ form.image_annotation_id(size=1) }}
-        <p>
-            		{{ form.annotation.label }}<br>
-            		{{ form.annotation(size=128) }}
-        		</p>
-        <p>{{ form.submit() }}</p>
-    </form>
-		</div>
-    </body>
-</html>
+			{{ form.image_id(size=4) }}
+			<p>
+				{{ form.annotation1.label }}<br>
+				{{ form.annotation1(size=128) }}
+			</p><p>
+				{{ form.annotation2.label }}<br>
+				{{ form.annotation2(size=128) }}
+			</p><p>
+				{{ form.annotation3.label }}<br>
+				{{ form.annotation3(size=128) }}
+			</p>
