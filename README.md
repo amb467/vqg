@@ -3,10 +3,30 @@
 
 # To Set up for the First Time
 
-## Accessing AWS
+## Setting up AWS
+This part of the instructions assumes that you are using an EC-2 instance running Amazon Linux.  If you are using a different OS, you may need to adjust these instructions.
 
-Put something here about cloning repo, installing python3 and requirements.txt
-Don't forget to upgrade pip
+Once on the instance, run the following commands:
+
+```
+yum update
+yum install git
+```
+
+Follow through prompts to install packages.  Now clone the git repo:
+
+```
+git clone https://github.com/amb467/vqg.git
+```
+
+You will need to provide your git credentials.  Now move into the repo directory and install all required python packages:
+
+
+```
+cd vqg
+python3 -m pip install -U pip
+python3 -m pip install -r requirements.txt
+```
 
 ## DB Initiation and Setup
 
@@ -17,6 +37,8 @@ flask db init
 flask db migrate -m "[description]"
 flask db upgrade
 ```
+
+(You can sudo this if you're on AWS)
 
 After running this command, you should find a SQLite database in the `app` directory.  The name of the database depends on what it is called in the `.flaskenv` file.  If you open the database and look at all of the tables, you should find the tables and schemas described in `app/models.py`.
 
@@ -36,8 +58,13 @@ The default arguments of this script are designed to be run from the top-level d
 python3 app/load_images.py --help
 ```
 
-
 # To Run
+
+If you are on AWS, you should run flask in the background.  You can skip this step if you're running locally:
+
+```
+screen
+```
 
 From the top-level directory, run the following command:
 
@@ -56,6 +83,12 @@ You should see the following:
  * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
 ```
 
-To access the app, you can now navigate to [http://localhost:5000](http://localhost:5000)
-
 To quit the app, go to the terminal and hit Ctrl+C.
+
+If you are running in the background, you can return to the foreground by typing Ctrl+A followed by Ctrl+D.
+
+If you need to return to the background screen where you can interact with the application, run:
+
+```
+screen -r
+```
