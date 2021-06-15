@@ -7,7 +7,7 @@ class User(db.Model):
     session_id = db.Column(db.Integer)
     progress = db.Column(db.Integer, default=0)
     attn_check = db.Column(db.String(12))
-    vision_check = db.Column(db.String(12))
+    vision_check = db.Column(db.String(8))
     start_time = db.Column(db.DateTime, default=datetime.utcnow)
     end_time = db.Column(db.DateTime)
     current_image_id = db.Column(db.Integer, db.ForeignKey('image.id')) 

@@ -16,7 +16,7 @@ def get_image_ids():
 # The total number of steps of the task
 def get_progress_completion():
     #return int(os.environ.get('PROGRESS_COMPLETION'))
-    return 1
+    return 2
 
     
 ##########
@@ -169,36 +169,45 @@ def validate_step(user_id, form):
     return err
 
 def _validate_post_survey(user_id, form):
+
+    # Get the post_survey information
     vision_q = form.vision_q.data
-    post_qs = [form.post_q1.data, form.post_q2.data, form.post_q3.data, form.post_q4.data, form.post_q5.data,]
+    post_qs = [form.post_q1.data, form.post_q2.data, form.post_q3.data, form.post_q4.data, form.post_q5.data]
+    logger.info(f'User {user_id}: Survey question answers: {vision_q}; {post_qs}')   
+ 
+    err = []    
+    # Validate that the user answered the vision question correctly
+    if vision_q == 'False':
+        err.append("You have been excluded from this study due to vision impairment.  This study requires vision in order to view images")
     
-    logger.info(f'User {user_id}: Survey question answers: {vision_q}; {post_qs}')
+    # Validate that the user answered the attention check questions correctly
+    post_q_labels = [form.post_q1.label, form.post_q2.label, form.post_q3.label, form.post_q4.label, form.post_q5.label]
+    answers = [False, True, False, None, True]
     
-    err = []
-    
-    """
-    validate that vision_q = 'I was able to see the images well enough to generate questions'
-    otherwise, add err = "You have been excluded from this study due to vision impairment.  This study requires vision in order to view images"
-    
-    validate that on post_qs, answers 0, 2 are not selected and 1,4 are selected
-    otherwise, add err = "You answered the attention check question incorrectly.  You have been excluded from this study."
-    
-    either way, add the post-survey to the database
-    
+    for i in [0,1,2,4]:
+        if not post_qs[i] == answers[i]:
+            err.append(f'You have been excluded from this study due to an incorrect attention check answer: The correct answer for "{post_q_labels[i]}" is {answers[i]} and you selected {post_qs[i]}')
+
+    # Add the new information to the database
     u = User.query.get(user_id)
     
     if not u:
         return "Invalid user"
         
-    u.attn_check = "-".join(post_qs)
+    u.attn_check = "-".join(["1" if a else "0" for a in post_qs])
     u.vision_check = vision_q
     u.end_time = datetime.utcnow()
+    
+    if len(err) > 0:
+        u.progress = -1
+        
     db.session.add(u)
-    err.append(_try_commit())
-    """  
-      
-    return ";".append(err)
+    
+    commit_err = _try_commit()
+    if commit_err:
+        err.append(commit_err)
 
+    return ";".join(err)
 
 ##########
 #
