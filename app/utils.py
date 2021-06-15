@@ -15,7 +15,8 @@ def get_image_ids():
     
 # The total number of steps of the task
 def get_progress_completion():
-    return int(os.environ.get('PROGRESS_COMPLETION'))
+    #return int(os.environ.get('PROGRESS_COMPLETION'))
+    return 1
 
     
 ##########
@@ -55,6 +56,7 @@ def get_user_progress(request):
             err.append(f"Session ID mismatch: found {u.session_id} in db but passed {arg_dict['SESSION_ID']}")        
     else:
         u = User(id=arg_dict['PROLIFIC_PID'], study_id=arg_dict['STUDY_ID'], session_id=arg_dict['SESSION_ID'])
+        u = _select_image(u)
         db.session.add(u)
         err_msg = _try_commit()
         if err_msg:
@@ -76,10 +78,10 @@ def _get_url_params(user_id, study_id, session_id, progress=None):
     args = f"{args}&progress={progress}" if progress else args
     logger.info(f"User {user_id}: returning parameters {args}")
     return args
-    
+
 ##########
 #
-#   Randomly select an image for the annotator to view
+#   Return the image information currently associated with this user
 #
 #   Return values:
 #       image_id: The id of the image in the COCO data set
@@ -87,14 +89,32 @@ def _get_url_params(user_id, study_id, session_id, progress=None):
 #
 ##########   
 def get_image(user_id):
-    
+
     # Get a list of all images previously annotated by this user
     u = User.query.get(user_id)
     if not u:
         err_msg = f"User {user_id}: User doesn't exist (in utils.get_image)"
         logger.error(err_msg)
         return None, None, err_msg
-            
+    
+    image_id = u.current_image_id
+    
+    img = Image.query.get(image_id)
+    if not img:
+        err_msg = f"Image {image_id}: Image doesn't exist (in utils.get_image)"
+        logger.error(err_msg)
+        return None, None, err_msg
+    
+    return image_id, img.img_url, None  
+   
+##########
+#
+#   Randomly select an image for the annotator to view and make this the user's current image
+#
+##########   
+def _select_image(u):
+    
+    # Get a list of all images that this user has annotated      
     annotated_images = set([annotation.image_id for annotation in u.annotations])
     
     # Now randomly select images until we find one that the user has not yet annotated
@@ -103,10 +123,9 @@ def get_image(user_id):
     while image_id in annotated_images:
         image_id = random.choice(get_image_ids())     
     
-    logger.info(f'User {user_id}: select image {image_id}')
-    # Return the image information
-    image = Image.query.get(image_id)
-    return image.id, image.img_url, None
+    logger.info(f'User {u.id}: select image {image_id}')
+    u.current_image_id = image_id
+    return u
 
 ##########
 #
@@ -190,15 +209,23 @@ def _validate_post_survey(user_id, form):
 #
 ########## 
 def _record_annotations(user_id, form):
-        a1 = Annotation(q_num=1, q_content=form.annotation1.data, image_id=form.image_id.data, user_id=user_id)
-        a2 = Annotation(q_num=2, q_content=form.annotation2.data, image_id=form.image_id.data, user_id=user_id)
-        a3 = Annotation(q_num=3, q_content=form.annotation3.data, image_id=form.image_id.data, user_id=user_id)
-        
-        db.session.add(a1)
-        db.session.add(a2)
-        db.session.add(a3)
-        
-        return _try_commit() 
+    a1 = Annotation(q_num=1, q_content=form.annotation1.data, image_id=form.image_id.data, user_id=user_id)
+    a2 = Annotation(q_num=2, q_content=form.annotation2.data, image_id=form.image_id.data, user_id=user_id)
+    a3 = Annotation(q_num=3, q_content=form.annotation3.data, image_id=form.image_id.data, user_id=user_id)
+    
+    db.session.add(a1)
+    db.session.add(a2)
+    db.session.add(a3)
+    
+    u = User.query.get(user_id)
+    if not u:
+        err_msg = f"User {user_id}: User doesn't exist (in utils._record_annotations)"
+        logger.error(err_msg)
+        return err_msg
+    
+    u = _select_image(u)
+    db.session.add(u) 
+    return _try_commit()
 
 ##########
 #

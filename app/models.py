@@ -10,6 +10,7 @@ class User(db.Model):
     vision_check = db.Column(db.String(12))
     start_time = db.Column(db.DateTime, default=datetime.utcnow)
     end_time = db.Column(db.DateTime)
+    current_image_id = db.Column(db.Integer, db.ForeignKey('image.id')) 
     annotations = db.relationship('Annotation', backref='author', lazy='dynamic')
 
     def __repr__(self):

@@ -1,8 +1,17 @@
 
-	<p>{{ post_q1 }} {{ post_q1.label }}</p>	
-	<p>{{ post_q2 }} {{ post_q2.label }}</p>
-	<p>{{ post_q3 }} {{ post_q3.label }}</p>
-	<p>{{ post_q4 }} {{ post_q4.label }}</p>
-	<p>{{ post_q5 }} {{ post_q5.label }}</p>					
+	<div class="d-flex flex-column align-items-start">
+	
+		<p>How well were you able to see the images in this survey?</p>
+		{% for subfield in form.vision_q %}
+			<p>{{ subfield }} {{ subfield.label }}</p>		
+		{% endfor %}
+		<p></p>
+		<p>What makes good questions on this survey?  Check all that apply:</p>
+		<p>{{ form.post_q1 }} {{ form.post_q1.label }}</p>	
+		<p>{{ form.post_q2 }} {{ form.post_q2.label }}</p>
+		<p>{{ form.post_q3 }} {{ form.post_q3.label }}</p>
+		<p>{{ form.post_q4 }} {{ form.post_q4.label }}</p>
+		<p>{{ form.post_q5 }} {{ form.post_q5.label }}</p>
+	</div>				
 
     <!--vision_q = RadioField(choices=['I was able to see the images well enough to generate questions', 'My vision was impaired and I was not able to see the images well enough to generate questions'], validators=[DataRequired()])-->

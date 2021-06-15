@@ -17,7 +17,7 @@ class AnnotationForm(BaseForm):
     annotation3 = TextAreaField('Generate a question about this image', validators=[DataRequired(), validate_annotation], render_kw={'cols': '100'})
 
 class PostSurvey(BaseForm):
-    vision_q = RadioField(choices=['I was able to see the images well enough to generate questions', 'My vision was impaired and I was not able to see the images well enough to generate questions'], validators=[DataRequired()])
+    vision_q = RadioField(choices=[(True, 'I was able to see the images well enough to generate questions'), (False, 'My vision was impaired and I was not able to see the images well enough to generate questions')], validators=[DataRequired()])
     post_q1 = BooleanField('They must be answerable from content in the image')
     post_q2 = BooleanField('They must not be answerable from content in the image')
     post_q3 = BooleanField('They must contain different languages')

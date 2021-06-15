@@ -2,10 +2,8 @@ import os, logging
 from flask import flash, redirect, render_template, request, url_for
 from app import app
 from app.forms import InitialScriptForm, AnnotationForm, PostSurvey
-from app.utils import get_user_progress, get_url_params, get_image, validate_step, get_unique_prolific_id
+from app.utils import get_progress_completion, get_user_progress, get_url_params, get_image, validate_step, get_unique_prolific_id
 from app.nocache import nocache
-
-PROGRESS_COMPLETION = int(os.environ.get('PROGRESS_COMPLETION'))
 
 ### Set up logging
 logger = logging.getLogger('vqg')
@@ -27,7 +25,7 @@ def main():
         return err_msg, 400
         
     # The participant has completed the task and needs a completion code
-    if progress == PROGRESS_COMPLETION:
+    if progress == get_progress_completion():
         logger.info(f'User {user_id}: User completed the task and is receiving a completion code')
         return render_template('completion.html', completion_code=os.environ.get('COMPLETION_CODE'))
     
@@ -44,7 +42,7 @@ def main():
         page_type = 'first'
     
     # The participant has completed the annotation task and must now complete the post-survey
-    if progress == PROGRESS_COMPLETION - 1:
+    if progress == get_progress_completion() - 1:
         logger.info(f'User {user_id}: User completed the annotation task, returning post-survey')
         form = PostSurvey()
         page_type = 'post-survey'
