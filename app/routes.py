@@ -2,7 +2,7 @@ import os, logging
 from flask import flash, redirect, render_template, request, url_for
 from app import app
 from app.forms import InitialScriptForm, AnnotationForm, PostSurvey
-from app.utils import get_user_progress, get_url_params, get_image, validate_step
+from app.utils import get_user_progress, get_url_params, get_image, validate_step, get_unique_prolific_id
 from app.nocache import nocache
 
 PROGRESS_COMPLETION = int(os.environ.get('PROGRESS_COMPLETION'))
@@ -37,10 +37,6 @@ def main():
         logger.info(f'User {user_id}: User failed to complete and will not receive a completion code')
         return render_template('completion.html')
     
-    image_id = ""
-    image_url = ""
-    image = False
-    
     # New user
     if progress == 0:
         logger.info(f'User {user_id}: Returning initial script to user')
@@ -56,11 +52,8 @@ def main():
     # The participant is in the middle of annotation
     elif progress > 0:
         logger.info(f'User {user_id}: User is at annotation step {progress}, returning annotation form')
-        page_type = 'annotate'
         form = AnnotationForm()
-        image_id, image_url = get_image(user_id)
-        form.image_id.data = image_id
-        image = True
+        page_type = 'annotate'
              
     if request.method == 'POST':
         if form.validate_on_submit():
@@ -79,7 +72,22 @@ def main():
         else:
             logger.info(f'User {user_id}: Form did not validate.  Form errors: {form.errors}')
             flash(f'Form errors: {form.errors}')
+            
+    image_id, image_url, err_msg = get_image(user_id)
         
+    if not err_msg is None:
+        return err_msg, 400
     
-    form.user_id.data = user_id        
-    return render_template('index.html', page_type=page_type, form=form, progress=progress, image=image, image_id=image_id, image_url=image_url)
+    if "image_id" in form.data.keys():
+        logger.info('User {user_id}: adding image id {image_id} to form')
+        form.image_id.data = image_id
+        
+    form.user_id.data = user_id    
+    return render_template('index.html', page_type=page_type, form=form, progress=progress, image_id=image_id, image_url=image_url)
+
+# Navigate here to automatically generate an unused Prolific ID 
+@app.route('/get_params', methods=['GET'])
+@nocache
+def get_params():
+    return redirect(f"{url_for('main')}{get_unique_prolific_id()}") 
+    

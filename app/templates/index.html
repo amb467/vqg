@@ -26,13 +26,7 @@
 		<div class="container">
 			<div class="page-header">
 				<h1>Visual Question Generation</h1>
-			</div>
-			
-			{% if image %}
-				<div class="h-50 d-flex justify-content-center">
-					<img src="{{ image_url }}" class="h-100 image-fluid"> 
-				</div>
-			{% endif %}  
+			</div> 
 			     
 			<form action="" method="post">
 				{{ form.hidden_tag() }}
@@ -42,9 +36,12 @@
 					{% include 'initial_page.html' %}
 				{% elif page_type == 'annotate' %}
 					{% include 'annotate.html' %}
+				{% elif page_type == 'post-survey' %}
+					{% include 'survey.html' %}				
 				{% else %}
-					Nothing
-				{% endif %}
+					This is not a valid page.  Please contact the Principal Investigator of this study, Amanda Buddemeyer, at amb467 (at)
+ pitt.edu for more information.
+ 				{% endif %}
 
 				<p>{{ form.submit() }}</p>
 			</form>

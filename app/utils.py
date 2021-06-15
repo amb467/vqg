@@ -1,11 +1,22 @@
-import os, logging
+import os, logging, random, re
 from app import db
 from app.models import User, Image, Annotation
-from sqlalchemy.exc import OperationalError
+from datetime import datetime
+from wtforms.validators import ValidationError, StopValidation
 
-PROGRESS_COMPLETION = int(os.environ.get('PROGRESS_COMPLETION'))
 logger = logging.getLogger('vqg')
 
+# A list of all image_ids that is used for image selection
+IMAGE_IDS = None
+
+def get_progress_completion():
+    return int(os.environ.get('PROGRESS_COMPLETION'))
+    
+def get_image_ids():
+    if IMAGE_IDS is None:
+        IMAGE_IDS = [image.id for image in Image.query.all()]
+    return IMAGE_IDS
+    
 ##########
 #
 #   This function does several things:
@@ -44,8 +55,10 @@ def get_user_progress(request):
     else:
         u = User(id=arg_dict['PROLIFIC_PID'], study_id=arg_dict['STUDY_ID'], session_id=arg_dict['SESSION_ID'])
         db.session.add(u)
-        _try_commit()
-    
+        err_msg = _try_commit()
+        if err_msg:
+            err.append(err_msg)
+        
     err = "" if len(err) == 0 else "; ".join(err)
     return arg_dict['PROLIFIC_PID'], u.progress, err
 
@@ -54,13 +67,15 @@ def get_user_progress(request):
 #   Return the parameters to append to the redirect url
 #
 ########## 
-def get_url_params(request, progress):
-    args = [f"{arg_name}={request.args.get(arg_name)}" for arg_name in ['PROLIFIC_PID', 'STUDY_ID', 'SESSION_ID']]
-    args = "&".join(args)
-    args = f"?{args}&progress={progress}"
-    logger.info(f"User {request.args.get('PROLIFIC_PID')}: returning parameters {args}")
-    return args
+def get_url_params(request, progress=None):
+    return _get_url_params(request.args.get('PROLIFIC_PID'), request.args.get('STUDY_ID'), request.args.get('SESSION_ID'), progress)
 
+def _get_url_params(user_id, study_id, session_id, progress=None):
+    args = f"?PROLIFIC_PID={user_id}&STUDY_ID={study_id}&SESSION_ID={session_id}"
+    args = f"{args}&progress={progress}" if progress else args
+    logger.info(f"User {user_id}: returning parameters {args}")
+    return args
+    
 ##########
 #
 #   Randomly select an image for the annotator to view
@@ -70,10 +85,27 @@ def get_url_params(request, progress):
 #       image_url: The url from which to load the image
 #
 ##########   
-def get_image(username):
-    image_id = 314392
-    image_url = "https://vision.ece.vt.edu/data/mscoco/images/train2014/./COCO_train2014_000000314392.jpg"
-    return image_id, image_url
+def get_image(user_id):
+    
+    # Get a list of all images previously annotated by this user
+    u = User.query.get(user_id)
+    if not u:
+        err_msg = f"User {user_id}: User doesn't exist (in utils.get_image)"
+        logger.error(err_msg)
+        return None, None, err_msg
+            
+    annotated_images = set([annotation.image_id for annotation in u.annotations])
+    
+    # Now randomly select images until we find one that the user has not yet annotated
+    image_id = random.choice(get_image_ids())
+    
+    while image_id in annotated_images:
+        image_id = random.choice(get_image_ids())     
+    
+    logger.info(f'User {user_id}: select image {image_id}')
+    # Return the image information
+    image = Image.query.get(image_id)
+    return image.id, image.img_url, None
 
 ##########
 #
@@ -92,7 +124,7 @@ def validate_step(user_id, form):
         return "Invalid user"
 
     # User completed the process, either successfully (PROGRESS_COMPLETION) or unsuccessfully (-1)
-    if u.progress == PROGRESS_COMPLETION or u.progress == -1:
+    if u.progress == get_progress_completion() or u.progress == -1:
         return "User complete"
     
     # New user, advance if the user select "I understand"
@@ -101,29 +133,146 @@ def validate_step(user_id, form):
             err = "User did not select 'I understand'"
     
     # User submitted post-survey, advance if the user answered questions correctly
-    elif u.progress == PROGRESS_COMPLETION - 1:
-        err = _validate_post_survey(form)
+    elif u.progress == get_progress_completion()  - 1:
+        err = _validate_post_survey(user_id, form)
     
-    # The user is annotating, advance if the user gave three unique questions for this image
+    # The user is annotating, record the annotations in the Annotations table.  There is
+    # no validation step here - the validation already happened on the form.
     else:
-        err = _validate_annotation(u, form)
+        err = _record_annotations(user_id, form)
     
     if not err:
         u.progress = u.progress + 1
         logger.info(f'User {user_id}: Advancing progress to {u.progress}')
-        _try_commit()
+        err = _try_commit()
     
     return err
 
-def _validate_post_survey(form):
-    return ""
+def _validate_post_survey(user_id, form):
+    vision_q = form.vision_q.data
+    post_qs = [form.post_q1.data, form.post_q2.data, form.post_q3.data, form.post_q4.data, form.post_q5.data,]
+    
+    logger.info(f'User {user_id}: Survey question answers: {vision_q}; {post_qs}')
+    
+    err = []
+    
+    """
+    validate that vision_q = 'I was able to see the images well enough to generate questions'
+    otherwise, add err = "You have been excluded from this study due to vision impairment.  This study requires vision in order to view images"
+    
+    validate that on post_qs, answers 0, 2 are not selected and 1,4 are selected
+    otherwise, add err = "You answered the attention check question incorrectly.  You have been excluded from this study."
+    
+    either way, add the post-survey to the database
+    
+    u = User.query.get(user_id)
+    
+    if not u:
+        return "Invalid user"
+        
+    u.attn_check = "-".join(post_qs)
+    u.vision_check = vision_q
+    u.end_time = datetime.utcnow()
+    db.session.add(u)
+    err.append(_try_commit())
+    """  
+      
+    return ";".append(err)
 
-def _validate_annotation(u, form):
-    return ""       
 
+##########
+#
+#   Record the annotations in the annotation table.
+#
+#   Return:
+#       err: If something went wrong while committing this annotation to the database
+#
+########## 
+def _record_annotations(user_id, form):
+        a1 = Annotation(q_num=1, q_content=form.annotation1.data, image_id=form.image_id.data, user_id=user_id)
+        a2 = Annotation(q_num=2, q_content=form.annotation2.data, image_id=form.image_id.data, user_id=user_id)
+        a3 = Annotation(q_num=3, q_content=form.annotation3.data, image_id=form.image_id.data, user_id=user_id)
+        
+        db.session.add(a1)
+        db.session.add(a2)
+        db.session.add(a3)
+        
+        return _try_commit() 
+
+##########
+#
+#   Try to commit changes to the database, log an error if it occurs
+#
+#   Return:
+#       err_msg: None if the commit went fine, includes an error message if there was one
+#
+########## 
 def _try_commit():
     try:
         db.session.commit()
+        return None
     except Exception as err:
-        logger.error(f'User {user_id}: Error message received when committing database: {err}')
-        print(f'Attempted to commit database and encountered a problem: {err}')
+        return f"Error message received when committing database: {err}"
+
+##########
+#
+#   Get the smallest positive integer that is not being used as a prolific id in the database
+#
+########## 
+def get_unique_prolific_id():
+    pid = 1
+    u = User.query.get(pid)
+    
+    while u:
+        pid += 1
+        u = User.query.get(pid)
+        
+    return _get_url_params(pid, 444, 555)
+
+##########
+#
+#   Validate that the annotation in the passed field of the passed form meets the following criteria:
+#       1. When stripped of everything but alphanumeric characters, it is at least five characters long
+#       2. The annotations on the form do not match each other (looking only at lowercased alphanumeric characters)
+#       3. The annotation in this form field does not match any previously submitted annotations (looking only at lowercased alphanumeric characters)
+#
+########## 
+def validate_annotation(form, field):
+    
+    user_id = form.user_id.data
+    
+    annotation_orig = field.data
+    annotation = _lcase_and_remove_whitespace(annotation_orig)
+    
+    if len(annotation) < 5:
+        _validation_err(user_id, field, f'The annotation is not a complete question (length {len(annotation)})') 
+    
+    # First make sure that this annotation does not match other annotations on the form
+    other_annotations_orig = [form.annotation1.data, form.annotation2.data, form.annotation3.data]
+    other_annotations = set([_lcase_and_remove_whitespace(item) for item in other_annotations_orig])
+    other_annotations.remove(annotation)
+    
+    if not len(other_annotations) == 2:
+        _validation_err(user_id, field, 'The three annotations for this image are not unique', f'{other_annotations_orig} - {len(other_annotations)}')
+    
+    # Now make sure that this annotation does not match other previously submitted annotations
+    u = User.query.get(user_id)
+    
+    if u:
+        prev_annotation_objs = u.annotations
+        other_annotations = [a.q_content for a in prev_annotation_objs]
+        other_annotations = set([_lcase_and_remove_whitespace(item) for item in other_annotations])
+        
+        if annotation in other_annotations:
+            _validation_err(user_id, field, 'This annotation matches a previous annotation from another image')          
+    else:
+        _validation_err(user_id, field, 'When validating annotations, could not find this user in the database')
+
+def _lcase_and_remove_whitespace(s):
+    s = re.findall("[a-z]+", s.lower())
+    return "".join(s)
+
+def _validation_err(user_id, field, validation_msg, supp_logging_msg=""):
+    logger.error(f'User {user_id}: {validation_msg}; {supp_logging_msg}')
+    field.errors += (ValidationError(validation_msg),)
+    StopValidation()
