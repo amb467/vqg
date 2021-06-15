@@ -6,16 +6,17 @@ from wtforms.validators import ValidationError, StopValidation
 
 logger = logging.getLogger('vqg')
 
+# A list of all image_ids that is used for image selection   
+IMAGE_IDS = None
+def get_image_ids():
+    global IMAGE_IDS
+    IMAGE_IDS = IMAGE_IDS if IMAGE_IDS else [image.id for image in Image.query.all()]
+    return IMAGE_IDS
+    
 # The total number of steps of the task
 def get_progress_completion():
     return int(os.environ.get('PROGRESS_COMPLETION'))
 
-# A list of all image_ids that is used for image selection   
-def get_image_ids():
-    global IMAGE_IDS
-    if IMAGE_IDS is None:
-        IMAGE_IDS = [image.id for image in Image.query.all()]
-    return IMAGE_IDS
     
 ##########
 #
