@@ -12,7 +12,7 @@ def get_progress_completion():
 
 # A list of all image_ids that is used for image selection   
 def get_image_ids():
-	global IMAGE_IDS
+    global IMAGE_IDS
     if IMAGE_IDS is None:
         IMAGE_IDS = [image.id for image in Image.query.all()]
     return IMAGE_IDS
