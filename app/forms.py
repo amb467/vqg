@@ -12,9 +12,9 @@ class InitialScriptForm(BaseForm):
        
 class AnnotationForm(BaseForm):
     image_id = HiddenField('Image ID', validators=[DataRequired()])
-    annotation1 = TextAreaField('Generate a question about this image', validators=[DataRequired(), validate_annotation], render_kw={'cols': '100'})
-    annotation2 = TextAreaField('Generate a question about this image', validators=[DataRequired(), validate_annotation], render_kw={'cols': '100'})
-    annotation3 = TextAreaField('Generate a question about this image', validators=[DataRequired(), validate_annotation], render_kw={'cols': '100'})
+    annotation1 = TextAreaField('Q1: ', validators=[DataRequired(), validate_annotation], render_kw={'cols': '100'})
+    annotation2 = TextAreaField('Q2: ', validators=[DataRequired(), validate_annotation], render_kw={'cols': '100'})
+    annotation3 = TextAreaField('Q3: ', validators=[DataRequired(), validate_annotation], render_kw={'cols': '100'})
 
 class PostSurvey(BaseForm):
     vision_q = RadioField(choices=[(True, 'I was able to see the images well enough to generate questions'), (False, 'My vision was impaired and I was not able to see the images well enough to generate questions')], validators=[DataRequired()])

@@ -1,6 +1,14 @@
-    <h1>Hi, {{ username }}!</h1>
-    <!--{% for post in posts %}
-    <div><p>{{ post.author.username }} says: <b>{{ post.body }}</b></p></div>
-    {% endfor %}-->
-    <p>Put initial message here</p>
+
+    <div class="left-div">
+    	<p>Hello, and thanks for your interest in this study on visual question generation from researchers at the University of Pittsburgh.  The task is as follows: we will show you several images.  For each image, you will have space to fill in three questions.  
+		{% include 'rules.html' %}	
+    	<p>This task should take you approximately five minutes.</p>
+    	<p>After looking at images, we will ask for some final questions that could exclude you from this study.  <strong>You will be excluded if:</strong></p>
+   		<p><ul>
+   			<li>You are vision impaired to the extent that you cannot see the images.</li>
+   			<li>You do not answer any attention check questions correctly</li>
+   		</ul></p>
+   		<p>There are no foreseeable risks associated with this project, nor are there any direct benefits to you. Each participant will be compensated with $1.75 for completing the task.  Within Prolific, your data is identifiable only by your worker ID number; we will convert this to an anonymous identifier once we extract your data from Prolific.  Your responses will not be identifiable in any way.</p>
+    </div>
+    
     <p>{{ form.understand }} {{ form.understand.label }}</p>

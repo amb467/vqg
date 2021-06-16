@@ -1,10 +1,71 @@
 textarea {
 	max-width: 100%;
+	width: 100%;
+}
+
+h1 {
+	font-size: 1.2rem;	    
+}
+
+li {
+	padding-bottom: 0.7em;
+}
+
+body {
+	margin: auto;
+}
+
+@media (orientation: landscape) {
+  body {
+    width: 60%;
+  }
+}
+
+@media (orientation: portrait) {
+  body {
+    width: 95%;
+  }
 }
 
 .container {
-	display: flex,
+	display: flex;
+	flex-direction: column;
 	width: 100%;
 	text-align: center;
 	justify-content: center;
+	align-items: center;
+}
+
+.row-container {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
+
+.left-div {
+	text-align: left;
+}
+
+.logo {
+	max-height: 3em;
+	width: auto;
+	padding-right: 2em;
+}
+
+.q-grid {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+}
+
+.q-row {
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-start;
+	align-items: center;
+	margin-bottom: 0.5em;
+}
+
+.q-label {
+	padding-right: 1em;
 }

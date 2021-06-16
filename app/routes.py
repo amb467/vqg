@@ -27,31 +27,33 @@ def main():
     # The participant has completed the task and needs a completion code
     if progress == get_progress_completion():
         logger.info(f'User {user_id}: User completed the task and is receiving a completion code')
-        return render_template('completion.html', completion_code=os.environ.get('COMPLETION_CODE'))
+        title = "Task Completion"
+        return render_template('completion.html', title=title, progress=progress, completion_code=os.environ.get('COMPLETION_CODE'))
     
     # The participant went through the survey but did not successfully complete the task
     # and does not get a completion code
     if progress == -1:
         logger.info(f'User {user_id}: User failed to complete and will not receive a completion code')
-        return render_template('completion.html')
+        title = "Task Not Complete"
+        return render_template('completion.html', title=title, progress=get_progress_completion())
     
     # New user
     if progress == 0:
         logger.info(f'User {user_id}: Returning initial script to user')
         form = InitialScriptForm()
-        page_type = 'first'
+        title = "Welcome to the VQG (Visual Question Generation) annotation application"
     
     # The participant has completed the annotation task and must now complete the post-survey
     if progress == get_progress_completion() - 1:
         logger.info(f'User {user_id}: User completed the annotation task, returning post-survey')
         form = PostSurvey()
-        page_type = 'post-survey'
+        title = "Post-Survey"
         
     # The participant is in the middle of annotation
     elif progress > 0:
         logger.info(f'User {user_id}: User is at annotation step {progress}, returning annotation form')
         form = AnnotationForm()
-        page_type = 'annotate'
+        title = "Image Annotation"
              
     if request.method == 'POST':
         if form.validate_on_submit():
@@ -81,11 +83,11 @@ def main():
         form.image_id.data = image_id
         
     form.user_id.data = user_id    
-    return render_template('index.html', page_type=page_type, form=form, progress=progress, image_id=image_id, image_url=image_url)
+    return render_template('index.html', title=title, progress=progress, form=form, image_id=image_id, image_url=image_url)
 
 # Navigate here to automatically generate an unused Prolific ID 
 @app.route('/get_params', methods=['GET'])
 @nocache
 def get_params():
-    return redirect(f"{url_for('main')}{get_unique_prolific_id()}") 
+    return redirect(f"{url_for('main')}{get_unique_prolific_id()}")
     

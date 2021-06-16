@@ -15,9 +15,7 @@ def get_image_ids():
     
 # The total number of steps of the task
 def get_progress_completion():
-    #return int(os.environ.get('PROGRESS_COMPLETION'))
-    return 2
-
+    return int(os.environ.get('PROGRESS_COMPLETION'))
     
 ##########
 #
@@ -154,8 +152,14 @@ def validate_step(user_id, form):
     
     # User submitted post-survey, advance if the user answered questions correctly
     elif u.progress == get_progress_completion()  - 1:
-        err = _validate_post_survey(user_id, form)
-    
+        err, val_msg = _validate_post_survey(user_id, form)
+        
+        if val_msg and not err:
+            u.progress = -1
+            db.session.add(u)
+            logger.info(f'User {user_id}: Setting progress to -1')
+            return _try_commit()
+            
     # The user is annotating, record the annotations in the Annotations table.  There is
     # no validation step here - the validation already happened on the form.
     else:
@@ -164,10 +168,20 @@ def validate_step(user_id, form):
     if not err:
         u.progress = u.progress + 1
         logger.info(f'User {user_id}: Advancing progress to {u.progress}')
+        db.session.add(u)
         err = _try_commit()
     
     return err
 
+##########
+#
+#   Validate whether the user successfully completed the post-survey
+#
+#   Return:
+#       err: If something went wrong while committing the survey or completion information to the database
+#       val_msg: A validation message if the user did not correctly answer the vision check or attention check
+#
+########## 
 def _validate_post_survey(user_id, form):
 
     # Get the post_survey information
@@ -178,7 +192,7 @@ def _validate_post_survey(user_id, form):
     err = []    
     # Validate that the user answered the vision question correctly
     if vision_q == 'False':
-        err.append("You have been excluded from this study due to vision impairment.  This study requires vision in order to view images")
+        err.append(f"User {user_id} excluded from this study due to vision impairment.")
     
     # Validate that the user answered the attention check questions correctly
     post_q_labels = [form.post_q1.label, form.post_q2.label, form.post_q3.label, form.post_q4.label, form.post_q5.label]
@@ -186,28 +200,22 @@ def _validate_post_survey(user_id, form):
     
     for i in [0,1,2,4]:
         if not post_qs[i] == answers[i]:
-            err.append(f'You have been excluded from this study due to an incorrect attention check answer: The correct answer for "{post_q_labels[i]}" is {answers[i]} and you selected {post_qs[i]}')
+            err.append(f'User {user_id} excluded from this study due to an incorrect attention check answer: The correct answer for "{post_q_labels[i]}" is {answers[i]} and you selected {post_qs[i]}')
 
     # Add the new information to the database
     u = User.query.get(user_id)
     
     if not u:
-        return "Invalid user"
-        
-    u.attn_check = "-".join(["1" if a else "0" for a in post_qs])
-    u.vision_check = vision_q
-    u.end_time = datetime.utcnow()
+        commit_err = "Invalid user"
+    else:    
+        u.attn_check = "-".join(["1" if a else "0" for a in post_qs])
+        u.vision_check = vision_q
+        u.end_time = datetime.utcnow()
+        db.session.add(u)
+        commit_err = _try_commit()
     
-    if len(err) > 0:
-        u.progress = -1
-        
-    db.session.add(u)
-    
-    commit_err = _try_commit()
-    if commit_err:
-        err.append(commit_err)
-
-    return ";".join(err)
+    val_msg = ";".join(err) if len(err) > 0 else None
+    return commit_err, val_msg
 
 ##########
 #

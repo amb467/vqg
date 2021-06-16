@@ -4,13 +4,20 @@
 			</div>
 
 			{{ form.image_id(size=4) }}
-			<p>
-				{{ form.annotation1.label }}<br>
-				{{ form.annotation1(size=128) }}
-			</p><p>
-				{{ form.annotation2.label }}<br>
-				{{ form.annotation2(size=128) }}
-			</p><p>
-				{{ form.annotation3.label }}<br>
-				{{ form.annotation3(size=128) }}
+			<p>Generate questions about this image:
+				<div class="q-grid">
+					<div class="q-row">
+						<div class="q-label">{{ form.annotation1.label }}</div>
+						<div>{{ form.annotation1(size=128) }}</div>
+					</div>
+					<div class="q-row">
+						<div class="q-label">{{ form.annotation2.label }}</div>
+						<div>{{ form.annotation2(size=128) }}</div>
+					</div>
+					<div class="q-row">
+						<div class="q-label">{{ form.annotation3.label }}</div>
+						<div>{{ form.annotation3(size=128) }}</div>
+					</div>
+				</div>
 			</p>
+			{% include 'rules.html' %}	
