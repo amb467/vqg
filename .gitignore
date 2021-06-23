@@ -1,4 +1,4 @@
-__pycache__
-env/
+app/vqg.db
+__pycache__/
+env
 vqg.log
-vqg.db.DS_Store
