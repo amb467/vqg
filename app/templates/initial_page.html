@@ -4,7 +4,7 @@
 		{% include 'rules.html' %}
 		<p>For example, consider this image:</p>
 		<div class="d-flex justify-content-center">
-			<img src="{{url_for('static', filename='aliens.jpg')}}" class="w-50">
+			<img src="{{url_for('static', filename='aliens.jpg')}}" class="w-100 h-100 .img-fluid" style="object-fit: scale-down;">
 		</div>
     	<p>Examples of bad questions would be "How many aliens are in this picture?" and "What color is the middle alien?" because those questions can be answered just by looking at the picture.  Examples of good questions would be, "Which of these aliens comes in peace?" and "Do aliens eat the same food as humans?"</p>
     	<p>This task should take you approximately five minutes.</p>
