@@ -1,7 +1,12 @@
 
     <div class="left-div">
     	<p>Hello, and thanks for your interest in this study on visual question generation from researchers at the University of Pittsburgh.  The task is as follows: we will show you several images.  For each image, you will have space to fill in three questions.  
-		{% include 'rules.html' %}	
+		{% include 'rules.html' %}
+		<p>For example, consider this image:</p>
+		<div class="d-flex justify-content-center">
+			<img src="{{url_for('static', filename='aliens.jpg')}}" class="w-50">
+		</div>
+    	<p>Examples of bad questions would be "How many aliens are in this picture?" and "What color is the middle alien?" because those questions can be answered just by looking at the picture.  Examples of good questions would be, "Which of these aliens comes in peace?" and "Do aliens eat the same food as humans?"</p>
     	<p>This task should take you approximately five minutes.</p>
     	<p>After looking at images, we will ask for some final questions that could exclude you from this study.  <strong>You will be excluded if:</strong></p>
    		<p><ul>

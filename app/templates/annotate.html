@@ -4,6 +4,19 @@
 			</div>
 
 			{{ form.image_id(size=4) }}
+
+			<p style="font-size: small;">
+				<a data-bs-toggle="collapse" href="#rules" role="button" aria-expanded="false" aria-controls="rules">
+					Toggle the rules
+				</a>
+			</p>
+			<div class="collapse" id="rules">
+			  <div class="card card-body">
+				{% include 'rules.html' %}
+			  </div>
+			</div>
+			
+			
 			<p>Generate questions about this image:
 				<div class="q-grid">
 					<div class="q-row">
@@ -19,5 +32,4 @@
 						<div>{{ form.annotation3(size=128) }}</div>
 					</div>
 				</div>
-			</p>
-			{% include 'rules.html' %}	
+			</p>	
