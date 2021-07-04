@@ -2,3 +2,4 @@ app/vqg.db
 __pycache__/
 env
 vqg.log
+app/vqg.db

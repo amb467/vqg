@@ -6,14 +6,22 @@ from wtforms.validators import ValidationError, StopValidation
 
 logger = logging.getLogger('vqg')
 
-# A list of all image_ids that is used for image selection   
+##########
+# 
+# 	A list of all image_ids that is used for image selection  
+#
+########## 
 IMAGE_IDS = None
 def get_image_ids():
     global IMAGE_IDS
     IMAGE_IDS = IMAGE_IDS if IMAGE_IDS else [image.id for image in Image.query.all()]
     return IMAGE_IDS
-    
-# The total number of steps of the task
+
+##########
+#    
+# 	The total number of steps of the task
+#
+##########
 def get_progress_completion():
     return int(os.environ.get('PROGRESS_COMPLETION'))
     
@@ -33,7 +41,6 @@ def get_progress_completion():
 #       err: an error message, if any
 #
 ##########
-
 def get_user_progress(request):
     arg_dict = dict([(arg_name, request.args.get(arg_name)) for arg_name in ['PROLIFIC_PID', 'STUDY_ID', 'SESSION_ID']])
     err = []
@@ -116,8 +123,7 @@ def _select_image(u):
     annotated_images = set([annotation.image_id for annotation in u.annotations])
     
     # Now randomly select images until we find one that the user has not yet annotated
-    image_id = random.choice(get_image_ids())
-    
+    image_id = random.choice(get_image_ids())  
     while image_id in annotated_images:
         image_id = random.choice(get_image_ids())     
     
@@ -151,7 +157,7 @@ def validate_step(user_id, form):
             err = "User did not select 'I understand'"
     
     # User submitted post-survey, advance if the user answered questions correctly
-    elif u.progress == get_progress_completion()  - 1:
+    elif u.progress == get_progress_completion() - 1:
         err, val_msg = _validate_post_survey(user_id, form)
         
         if val_msg and not err:
@@ -186,14 +192,21 @@ def _validate_post_survey(user_id, form):
 
     # Get the post_survey information
     vision_q = form.vision_q.data
-    post_qs = [form.post_q1.data, form.post_q2.data, form.post_q3.data, form.post_q4.data, form.post_q5.data]
-    logger.info(f'User {user_id}: Survey question answers: {vision_q}; {post_qs}')   
+    attention_check = form.attention_check.data
+    logger.info(f'User {user_id}: Survey question answers: {vision_q}; {attention_check}')  
+    #post_qs = [form.post_q1.data, form.post_q2.data, form.post_q3.data, form.post_q4.data, form.post_q5.data]
+    #logger.info(f'User {user_id}: Survey question answers: {vision_q}; {post_qs}')   
  
     err = []    
     # Validate that the user answered the vision question correctly
     if vision_q == 'False':
         err.append(f"User {user_id} excluded from this study due to vision impairment.")
-    
+
+    # Validate that the user answered the attention check correctly
+    if attention_check == 'False':
+        err.append(f"User {user_id} excluded from this study due to vision impairment.")    
+        
+    """
     # Validate that the user answered the attention check questions correctly
     post_q_labels = [form.post_q1.label, form.post_q2.label, form.post_q3.label, form.post_q4.label, form.post_q5.label]
     answers = [False, True, False, None, True]
@@ -201,14 +214,16 @@ def _validate_post_survey(user_id, form):
     for i in [0,1,2,4]:
         if not post_qs[i] == answers[i]:
             err.append(f'User {user_id} excluded from this study due to an incorrect attention check answer: The correct answer for "{post_q_labels[i]}" is {answers[i]} and you selected {post_qs[i]}')
-
+	"""
+	
     # Add the new information to the database
     u = User.query.get(user_id)
     
     if not u:
         commit_err = "Invalid user"
     else:    
-        u.attn_check = "-".join(["1" if a else "0" for a in post_qs])
+        #u.attn_check = "-".join(["1" if a else "0" for a in post_qs])
+        u.attn_check = attention_check
         u.vision_check = vision_q
         u.end_time = datetime.utcnow()
         db.session.add(u)
@@ -228,11 +243,11 @@ def _validate_post_survey(user_id, form):
 def _record_annotations(user_id, form):
     a1 = Annotation(q_num=1, q_content=form.annotation1.data, image_id=form.image_id.data, user_id=user_id)
     a2 = Annotation(q_num=2, q_content=form.annotation2.data, image_id=form.image_id.data, user_id=user_id)
-    a3 = Annotation(q_num=3, q_content=form.annotation3.data, image_id=form.image_id.data, user_id=user_id)
+    #a3 = Annotation(q_num=3, q_content=form.annotation3.data, image_id=form.image_id.data, user_id=user_id)
     
     db.session.add(a1)
     db.session.add(a2)
-    db.session.add(a3)
+    #db.session.add(a3)
     
     u = User.query.get(user_id)
     if not u:
@@ -284,21 +299,23 @@ def get_unique_prolific_id():
 ########## 
 def validate_annotation(form, field):
     
-    user_id = form.user_id.data
-    
+    user_id = form.user_id.data  
     annotation_orig = field.data
     annotation = _lcase_and_remove_whitespace(annotation_orig)
     
+    # Annotation must be at least five characters long
     if len(annotation) < 5:
         _validation_err(user_id, field, f'The annotation is not a complete question (length {len(annotation)})') 
     
     # First make sure that this annotation does not match other annotations on the form
-    other_annotations_orig = [form.annotation1.data, form.annotation2.data, form.annotation3.data]
+    #other_annotations_orig = [form.annotation1.data, form.annotation2.data, form.annotation3.data]
+    other_annotations_orig = [form.annotation1.data, form.annotation2.data]
+    other_annotations_length = len(other_annotations_orig)
     other_annotations = set([_lcase_and_remove_whitespace(item) for item in other_annotations_orig])
     other_annotations.remove(annotation)
     
-    if not len(other_annotations) == 2:
-        _validation_err(user_id, field, 'The three annotations for this image are not unique', f'{other_annotations_orig} - {len(other_annotations)}')
+    if not len(other_annotations) == other_annotations_length - 1:
+        _validation_err(user_id, field, 'The annotations for this image are not unique', f'{other_annotations_orig} - {len(other_annotations)}')
     
     # Now make sure that this annotation does not match other previously submitted annotations
     u = User.query.get(user_id)
