@@ -15,8 +15,11 @@ class User(db.Model):
     annotations = db.relationship('Annotation', backref='author', lazy='dynamic')
 
     def __repr__(self):
-        return '<User {}>'.format(self.id)  
+        return '<User {}>'.format(self.id)
 
+	def get_user(user_id):
+		return User.query.filter_by(prolific_id=user_id).first()
+		
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     data_set = db.Column(db.String(5), index=True)

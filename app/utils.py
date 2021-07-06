@@ -51,7 +51,7 @@ def get_user_progress(request):
             err.append(f'{arg_name} is required')
     
     # Now check if the user exists and if the study and session ids match up
-    u = User.query.get(arg_dict['PROLIFIC_PID'])
+    u = User.get_user(arg_dict['PROLIFIC_PID'])
     
     if u:
         if not u.study_id == int(arg_dict['STUDY_ID']):
@@ -96,7 +96,7 @@ def _get_url_params(user_id, study_id, session_id, progress=None):
 def get_image(user_id):
 
     # Get a list of all images previously annotated by this user
-    u = User.query.get(user_id)
+    u = User.get_user(user_id)
     if not u:
         err_msg = f"User {user_id}: User doesn't exist (in utils.get_image)"
         logger.error(err_msg)
@@ -141,7 +141,7 @@ def _select_image(u):
 ##########     
 def validate_step(user_id, form):
     
-    u = User.query.get(user_id)
+    u = User.get_user(user_id)
     err = ""
     
     if not u:
@@ -217,7 +217,7 @@ def _validate_post_survey(user_id, form):
     """
     
     # Add the new information to the database
-    u = User.query.get(user_id)
+    u = User.get_user(user_id)
     
     if not u:
         commit_err = "Invalid user"
@@ -249,7 +249,7 @@ def _record_annotations(user_id, form):
     db.session.add(a2)
     #db.session.add(a3)
     
-    u = User.query.get(user_id)
+    u = User.get_user(user_id)
     if not u:
         err_msg = f"User {user_id}: User doesn't exist (in utils._record_annotations)"
         logger.error(err_msg)
@@ -281,11 +281,11 @@ def _try_commit():
 ########## 
 def get_unique_prolific_id():
     pid = 1
-    u = User.query.get(pid)
+    u = User.get_user(pid)
     
     while u:
         pid += 1
-        u = User.query.get(pid)
+        u = User.get_user(pid)
         
     return _get_url_params(pid, 444, 555)
 
@@ -318,7 +318,7 @@ def validate_annotation(form, field):
         _validation_err(user_id, field, 'The annotations for this image are not unique', f'{other_annotations_orig} - {len(other_annotations)}')
     
     # Now make sure that this annotation does not match other previously submitted annotations
-    u = User.query.get(user_id)
+    u = User.get_user(user_id)
     
     if u:
         prev_annotation_objs = u.annotations
