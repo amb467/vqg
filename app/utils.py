@@ -54,10 +54,10 @@ def get_user_progress(request):
     u = User.get_user(arg_dict['PROLIFIC_PID'])
     
     if u:
-        if not u.study_id == int(arg_dict['STUDY_ID']):
+        if not u.study_id == arg_dict['STUDY_ID']:
             err.append(f"Study ID mismatch: found {u.study_id} in db but passed {arg_dict['STUDY_ID']}")
 
-        if not u.session_id == int(arg_dict['SESSION_ID']):
+        if not u.session_id == arg_dict['SESSION_ID']:
             err.append(f"Session ID mismatch: found {u.session_id} in db but passed {arg_dict['SESSION_ID']}")        
     else:
         u = User(prolific_id=arg_dict['PROLIFIC_PID'], study_id=arg_dict['STUDY_ID'], session_id=arg_dict['SESSION_ID'])
