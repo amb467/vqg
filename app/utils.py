@@ -8,7 +8,7 @@ logger = logging.getLogger('vqg')
 
 ##########
 # 
-# 	A list of all image_ids that is used for image selection  
+#   A list of all image_ids that is used for image selection  
 #
 ########## 
 IMAGE_IDS = None
@@ -19,7 +19,7 @@ def get_image_ids():
 
 ##########
 #    
-# 	The total number of steps of the task
+#   The total number of steps of the task
 #
 ##########
 def get_progress_completion():
@@ -60,7 +60,7 @@ def get_user_progress(request):
         if not u.session_id == int(arg_dict['SESSION_ID']):
             err.append(f"Session ID mismatch: found {u.session_id} in db but passed {arg_dict['SESSION_ID']}")        
     else:
-        u = User(id=arg_dict['PROLIFIC_PID'], study_id=arg_dict['STUDY_ID'], session_id=arg_dict['SESSION_ID'])
+        u = User(prolific_id=arg_dict['PROLIFIC_PID'], study_id=arg_dict['STUDY_ID'], session_id=arg_dict['SESSION_ID'])
         u = _select_image(u)
         db.session.add(u)
         err_msg = _try_commit()
@@ -214,8 +214,8 @@ def _validate_post_survey(user_id, form):
     for i in [0,1,2,4]:
         if not post_qs[i] == answers[i]:
             err.append(f'User {user_id} excluded from this study due to an incorrect attention check answer: The correct answer for "{post_q_labels[i]}" is {answers[i]} and you selected {post_qs[i]}')
-	"""
-	
+    """
+    
     # Add the new information to the database
     u = User.query.get(user_id)
     

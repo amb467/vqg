@@ -3,8 +3,9 @@ from app import db
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    study_id = db.Column(db.Integer)
-    session_id = db.Column(db.Integer)
+    prolific_id = db.Column(db.String(64))
+    study_id = db.Column(db.String(64))
+    session_id = db.Column(db.String(64))
     progress = db.Column(db.Integer, default=0)
     attn_check = db.Column(db.String(12))
     vision_check = db.Column(db.String(8))
