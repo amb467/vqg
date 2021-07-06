@@ -17,9 +17,9 @@ class User(db.Model):
     def __repr__(self):
         return '<User {}>'.format(self.id)
 
-	def get_user(user_id):
-		return User.query.filter_by(prolific_id=user_id).first()
-		
+    def get_user(user_id):
+        return User.query.filter_by(prolific_id=user_id).first()
+        
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     data_set = db.Column(db.String(5), index=True)
