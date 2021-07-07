@@ -83,7 +83,7 @@ def main():
         form.image_id.data = image_id
         
     form.user_id.data = user_id    
-    return render_template('index.html', title=title, progress=progress, form=form, image_id=image_id, image_url=image_url)
+    return render_template('index.html', title=title, progress=progress, form=form, image_id=image_id, image_url=image_url, total=get_progress_completion())
 
 # Navigate here to automatically generate an unused Prolific ID 
 @app.route('/get_params', methods=['GET'])

@@ -14,7 +14,7 @@
 					<img src="{{url_for('static', filename='pitt_logo.png')}}" alt="University of Pittsburgh logo" class="logo">
 				</div>
 				<div>
-					<label for="prog">Progress: Step {{ progress }} of 7</label>
+					<label for="prog">Progress: Step {{ progress }} of {{ total }}</label>
 					<progress id="prog" max="7" value="{{ progress }}"></progress>
 				</div>
 			</div>
