@@ -1,6 +1,7 @@
 import os, logging, random, re
 from app import db
 from app.models import User, Image, Annotation
+from collections import defaultdict
 from datetime import datetime
 from wtforms.validators import ValidationError, StopValidation
 
@@ -8,14 +9,21 @@ logger = logging.getLogger('vqg')
 
 ##########
 # 
-#   A list of all image_ids that is used for image selection  
+#   A list of all image_ids that is used for image selection.  Only return the 
+#   ids of images with the least number of annotations
 #
 ########## 
-IMAGE_IDS = None
 def get_image_ids():
-    global IMAGE_IDS
-    IMAGE_IDS = IMAGE_IDS if IMAGE_IDS else [image.id for image in Image.query.all()]
-    return IMAGE_IDS
+    images_by_count = defaultdict(list)
+    images = [(len(list(image.annotations)), image.id) for image in Image.query.all()]
+    
+    for annotation_count, image_id in images:
+        images_by_count[annotation_count].append(image_id)
+    
+    min_annotations = min(images_by_count.keys())
+    image_ids = images_by_count[min_annotations]
+    logger.info(f'get_image_ids returning image id list with length {len(image_ids)}')
+    return images_by_count[min_annotations]
 
 ##########
 #    
@@ -110,7 +118,7 @@ def get_image(user_id):
         logger.error(err_msg)
         return None, None, err_msg
     
-    return image_id, img.img_url, None  
+    return image_id, img.img_path, None
    
 ##########
 #
@@ -189,7 +197,7 @@ def validate_step(user_id, form):
 #
 ########## 
 def _validate_post_survey(user_id, form):
-
+    
     # Get the post_survey information
     vision_q = form.vision_q.data
     attention_check = form.attention_check.data
@@ -201,10 +209,12 @@ def _validate_post_survey(user_id, form):
     # Validate that the user answered the vision question correctly
     if vision_q == 'False':
         err.append(f"User {user_id} excluded from this study due to vision impairment.")
+        logger.info(f"User {user_id} excluded from this study due to vision impairment.")
 
     # Validate that the user answered the attention check correctly
     if attention_check == 'False':
-        err.append(f"User {user_id} excluded from this study due to vision impairment.")    
+        err.append(f"User {user_id} excluded from this study due to failed attention check.")
+        logger.info(f"User {user_id} excluded from this study due to failed attention check.") 
         
     """
     # Validate that the user answered the attention check questions correctly
@@ -226,11 +236,30 @@ def _validate_post_survey(user_id, form):
         u.attn_check = attention_check
         u.vision_check = vision_q
         u.end_time = datetime.utcnow()
+        u.race = _get_demographic(form.race_q.data, form.race_q_other.data)
+        u.gender = _get_demographic(form.gender_q.data, form.gender_q_other.data)
         db.session.add(u)
         commit_err = _try_commit()
     
     val_msg = ";".join(err) if len(err) > 0 else None
     return commit_err, val_msg
+
+##########
+#
+#   Calculate the value of demographic based on the checkbox and "Let me type:" values
+#
+#   Return:
+#       A string representing the demographic
+#
+########## 
+def _get_demographic(checkbox_data, other_data):
+    
+    if 'other' in checkbox_data:
+        checkbox_data.remove('other')
+        other_data = other_data if other_data else ''
+        checkbox_data.append(f'o-{other_data}')
+    
+    return '|'.join(checkbox_data)
 
 ##########
 #
@@ -241,19 +270,20 @@ def _validate_post_survey(user_id, form):
 #
 ########## 
 def _record_annotations(user_id, form):
-    a1 = Annotation(q_num=1, q_content=form.annotation1.data, image_id=form.image_id.data, user_id=user_id)
-    a2 = Annotation(q_num=2, q_content=form.annotation2.data, image_id=form.image_id.data, user_id=user_id)
-    #a3 = Annotation(q_num=3, q_content=form.annotation3.data, image_id=form.image_id.data, user_id=user_id)
-    
-    db.session.add(a1)
-    db.session.add(a2)
-    #db.session.add(a3)
-    
+
     u = User.get_user(user_id)
     if not u:
         err_msg = f"User {user_id}: User doesn't exist (in utils._record_annotations)"
         logger.error(err_msg)
         return err_msg
+        
+    a1 = Annotation(q_num=1, q_content=form.annotation1.data, image_id=form.image_id.data, user_id=u.id)
+    a2 = Annotation(q_num=2, q_content=form.annotation2.data, image_id=form.image_id.data, user_id=u.id)
+    #a3 = Annotation(q_num=3, q_content=form.annotation3.data, image_id=form.image_id.data, user_id=u.id)
+    
+    db.session.add(a1)
+    db.session.add(a2)
+    #db.session.add(a3)
     
     u = _select_image(u)
     db.session.add(u) 

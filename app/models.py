@@ -9,6 +9,8 @@ class User(db.Model):
     progress = db.Column(db.Integer, default=0)
     attn_check = db.Column(db.String(12))
     vision_check = db.Column(db.String(8))
+    race = db.Column(db.String(64))
+    gender = db.Column(db.String(64))
     start_time = db.Column(db.DateTime, default=datetime.utcnow)
     end_time = db.Column(db.DateTime)
     current_image_id = db.Column(db.Integer, db.ForeignKey('image.id')) 
@@ -22,8 +24,9 @@ class User(db.Model):
         
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    data_set = db.Column(db.String(5), index=True)
-    img_url = db.Column(db.String(256))
+    img_path = db.Column(db.String(256))
+    img_xclude = db.Column(db.Boolean, default=False)
+    annotations = db.relationship('Annotation', backref='image_ref', lazy='dynamic')
 
     def __repr__(self):
         return '<Image {}>'.format(self.id)    
@@ -36,6 +39,7 @@ class Annotation(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     image_id = db.Column(db.Integer, db.ForeignKey('image.id'), index=True)    
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    #image = db.relationship('Image', back_populates='annotations')
 
     def __repr__(self):
         return '<Annotation {}>'.format(self.q_content)

@@ -3,3 +3,4 @@ __pycache__/
 env
 vqg.log
 app/vqg.db
+.DS_Store

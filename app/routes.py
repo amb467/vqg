@@ -28,14 +28,14 @@ def main():
     if progress == get_progress_completion():
         logger.info(f'User {user_id}: User completed the task and is receiving a completion code')
         title = "Task Completion"
-        return render_template('completion.html', title=title, progress=progress, completion_code=os.environ.get('COMPLETION_CODE'))
+        return render_template('completion.html', title=title, progress=progress, completion_code=os.environ.get('COMPLETION_CODE'), total=get_progress_completion())
     
     # The participant went through the survey but did not successfully complete the task
     # and does not get a completion code
     if progress == -1:
         logger.info(f'User {user_id}: User failed to complete and will not receive a completion code')
         title = "Task Not Complete"
-        return render_template('completion.html', title=title, progress=get_progress_completion())
+        return render_template('completion.html', title=title, progress=get_progress_completion(), total=get_progress_completion())
     
     # New user
     if progress == 0:
@@ -79,7 +79,7 @@ def main():
         return err_msg, 400
     
     if "image_id" in form.data.keys():
-        logger.info('User {user_id}: adding image id {image_id} to form')
+        logger.info(f'User {user_id}: adding image id {image_id} to form')
         form.image_id.data = image_id
         
     form.user_id.data = user_id    

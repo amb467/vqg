@@ -1,13 +1,44 @@
 
+	
+	<p style="font-size: small;">
+		<a data-bs-toggle="collapse" href="#rules" role="button" aria-expanded="false" aria-controls="rules">
+			Toggle the rules
+		</a>
+	</p>
+	<div class="collapse" id="rules">
+	  <div class="card card-body">
+		{% include 'rules.html' %}
+	  </div>
+	</div>
+	
 	<div class="d-flex flex-column align-items-start">
 	
+		<p><strong>{{ form.race_q.label }}</strong></p>
+		{% for subfield in form.race_q %}
+			<p>{{ subfield }} {{ subfield.label }}
+			{% if subfield.label.text == 'Let me type:' %}
+				{{ form.race_q_other }}
+			{% endif %}
+			</p>
+		{% endfor %}
+		<p></p>
+		<p><strong>{{ form.gender_q.label }}</strong></p>
+		{% for subfield in form.gender_q %}
+			<p>{{ subfield }} {{ subfield.label }}
+			{% if subfield.label.text == 'Let me type:' %}
+				{{ form.gender_q_other }}
+			{% endif %}
+			</p>	
+		{% endfor %}
+		<p></p>
 		<p><strong>How well were you able to see the images in this survey?</strong></p>
 		{% for subfield in form.vision_q %}
 			<p>{{ subfield }} {{ subfield.label }}</p>		
 		{% endfor %}
 		<p></p>
-		<p><strong>What makes good questions according to the rules of this survey?  Check all that apply:</strong></p>
+		<p><strong>What makes good questions according to the rules of this survey?</strong></p>
 		{% for subfield in form.attention_check %}
-			<p>{{ subfield }} {{ subfield.label }}</p>	
-		{% endfor %}
+			<p>{{ subfield }} {{ subfield.label }}</p>
+		{% endfor %}	
+		
 	</div>
