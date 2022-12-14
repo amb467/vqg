@@ -71,6 +71,7 @@ class PostSurvey(BaseForm):
                                         ('other', 'Let me type:'),
                                         ('r', 'I\'d rather not say')],
                                validators=[validators.DataRequired()])
+    prev_survey = RadioField(choices=[("Y", 'Yes, I recall completing survey at least once before'), ("N", 'No, I do not recall completing this survey before')], validators=[validators.DataRequired()])
                                                               
     gender_q_other = StringField('', [validators.optional(), validators.length(max=48)])
     attention_check = RadioField(choices=[("False", 'They must be answerable from content in the image'), ("True", 'They must not be answerable from content in the image')], validators=[validators.DataRequired()])

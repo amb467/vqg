@@ -201,7 +201,8 @@ def _validate_post_survey(user_id, form):
     # Get the post_survey information
     vision_q = form.vision_q.data
     attention_check = form.attention_check.data
-    logger.info(f'User {user_id}: Survey question answers: {vision_q}; {attention_check}')  
+    prev_survey = form.prev_survey.data
+    logger.info(f'User {user_id}: Survey question answers: {vision_q}; {attention_check}; {prev_survey}')  
     #post_qs = [form.post_q1.data, form.post_q2.data, form.post_q3.data, form.post_q4.data, form.post_q5.data]
     #logger.info(f'User {user_id}: Survey question answers: {vision_q}; {post_qs}')   
  
@@ -235,6 +236,7 @@ def _validate_post_survey(user_id, form):
         #u.attn_check = "-".join(["1" if a else "0" for a in post_qs])
         u.attn_check = attention_check
         u.vision_check = vision_q
+        u.prev_survey = prev_survey
         u.end_time = datetime.utcnow()
         u.race = _get_demographic(form.race_q.data, form.race_q_other.data)
         u.gender = _get_demographic(form.gender_q.data, form.gender_q_other.data)

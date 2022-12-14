@@ -1,8 +1,8 @@
-"""The first
+"""control data collection
 
-Revision ID: 30dc147e8c8c
+Revision ID: 8eaeb70cbfa1
 Revises: 
-Create Date: 2021-08-13 12:33:32.205872
+Create Date: 2022-12-14 11:01:21.115964
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '30dc147e8c8c'
+revision = '8eaeb70cbfa1'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -31,9 +31,10 @@ def upgrade():
     sa.Column('session_id', sa.String(length=64), nullable=True),
     sa.Column('progress', sa.Integer(), nullable=True),
     sa.Column('attn_check', sa.String(length=12), nullable=True),
+    sa.Column('prev_survey', sa.String(length=1), nullable=True),
     sa.Column('vision_check', sa.String(length=8), nullable=True),
-    sa.Column('race', sa.String(length=16), nullable=True),
-    sa.Column('gender', sa.String(length=16), nullable=True),
+    sa.Column('race', sa.String(length=64), nullable=True),
+    sa.Column('gender', sa.String(length=64), nullable=True),
     sa.Column('start_time', sa.DateTime(), nullable=True),
     sa.Column('end_time', sa.DateTime(), nullable=True),
     sa.Column('current_image_id', sa.Integer(), nullable=True),

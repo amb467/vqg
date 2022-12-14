@@ -8,6 +8,7 @@ class User(db.Model):
     session_id = db.Column(db.String(64))
     progress = db.Column(db.Integer, default=0)
     attn_check = db.Column(db.String(12))
+    prev_survey = db.Column(db.String(1))
     vision_check = db.Column(db.String(8))
     race = db.Column(db.String(64))
     gender = db.Column(db.String(64))

@@ -40,5 +40,9 @@
 		{% for subfield in form.attention_check %}
 			<p>{{ subfield }} {{ subfield.label }}</p>
 		{% endfor %}	
-		
+		<p></p>
+		<p><strong>To the best of your memory, do you recall ever completing this survey before?</strong></p>
+		{% for subfield in form.prev_survey %}
+			<p>{{ subfield }} {{ subfield.label }}</p>	
+		{% endfor %}	
 	</div>
